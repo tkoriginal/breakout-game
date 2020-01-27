@@ -10,7 +10,28 @@ const ballRadius = 10;
 
 const paddleHeight = 10;
 const paddleWidth = 75;
-const paddleX = (canvas.width - paddleWidth) / 2;
+let paddleX = (canvas.width - paddleWidth) / 2;
+let rightPressed = false;
+let leftPressed = false;
+
+const keyDownHandler = event => {
+  if (event.keyCode === 39) {
+    rightPressed = true;
+  } else if (event.keyCode === 37) {
+    leftPressed = true;
+  }
+};
+
+const keyUpHandler = event => {
+  if (event.keyCode === 39) {
+    rightPressed = false;
+  } else if (event.keyCode === 37) {
+    leftPressed = false;
+  }
+};
+
+document.addEventListener('keydown', keyDownHandler);
+document.addEventListener('keyup', keyUpHandler);
 
 const drawBall = () => {
   context.beginPath();
@@ -39,9 +60,17 @@ const draw = () => {
   drawPaddle();
 
   // check to see if the ball is on the edge, then reverse directions
-  if (y + dy > canvas.height - ballRadius || y + dy < ballRadius) dy = -dy;
+  if (y + dy < ballRadius) dy = -dy;
+  if (y + dy > canvas.height - ballRadius) {
+    if (x > paddleX && x < paddleX + paddleWidth) dy = -dy;
+    else {
+      alert('GAME OVER');
+      document.location.reload();
+    }
+  }
   if (x + dx > canvas.width - ballRadius || x + dy < ballRadius) dx = -dx;
-
+  if (rightPressed && paddleX < canvas.width - paddleWidth) paddleX += 7;
+  if (leftPressed && paddleX > 0) paddleX -= 7;
   x += dx;
   y += dy;
 };
