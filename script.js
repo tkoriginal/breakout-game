@@ -4,8 +4,8 @@ const context = canvas.getContext('2d');
 let x = canvas.width / 2;
 let y = canvas.height - 30;
 
-let dx = 2;
-let dy = -2;
+let dx = 5;
+let dy = -5;
 const ballRadius = 10;
 
 const paddleHeight = 10;
@@ -21,18 +21,26 @@ let brickPadding = 10;
 let brickOffsetTop = 30;
 let brickOffsetLeft = 30;
 let score = 0;
+let lives = 3;
+let level = 1;
+let maxLevel = 5;
 
 let bricks = [];
-for (column = 0; column < brickColumnCount; column++) {
-  bricks[column] = [];
-  for (row = 0; row < brickRowCount; row++) {
-    bricks[column][row] = {
-      x: 0,
-      y: 0,
-      status: 1,
-    };
+const initBricks = () => {
+  for (column = 0; column < brickColumnCount; column++) {
+    bricks[column] = [];
+    for (row = 0; row < brickRowCount; row++) {
+      bricks[column][row] = {
+        x: 0,
+        y: 0,
+        status: 1,
+      };
+    }
   }
-}
+};
+
+initBricks();
+
 const keyDownHandler = event => {
   if (event.keyCode === 39) {
     rightPressed = true;
@@ -51,7 +59,10 @@ const keyUpHandler = event => {
 
 const mouseMoveHandler = event => {
   let relativeX = event.clientX - canvas.offsetLeft;
-  if (relativeX > 0 && relativeX < canvas.width) {
+  if (
+    relativeX > paddleWidth / 2 &&
+    relativeX < canvas.width - paddleWidth / 2
+  ) {
     paddleX = relativeX - paddleWidth / 2;
   }
 };
@@ -65,6 +76,19 @@ const drawScore = () => {
   context.fillStyle = '#0095DD';
   context.fillText(`Score: ${score}`, 8, 20);
 };
+
+const drawLives = () => {
+  context.font = '16px sans-serif';
+  context.fillStyle = '#0095DD';
+  context.fillText(`Lives: ${lives}`, canvas.width - 65, 20);
+};
+
+const drawLevel = () => {
+  context.font = '16px sans-serif';
+  context.fillStyle = '#0095DD';
+  context.fillText(`Level: ${level}`, canvas.width / 2 - 30, 20);
+};
+
 const drawBall = () => {
   context.beginPath();
   context.arc(x, y, ballRadius, (Math.PI / 180) * 0, (Math.PI / 180) * 360);
@@ -101,8 +125,13 @@ const collisionDetection = () => {
           brick.status = 0;
           score++;
           if (score === brickColumnCount * brickRowCount) {
-            alert('You Win!');
-            window.location.reload();
+            if (level === maxLevel) {
+              alert('You Win!');
+              window.location.reload();
+            } else {
+              level++;
+              initBricks();
+            }
           }
         }
       }
@@ -134,15 +163,20 @@ const draw = () => {
   drawBricks();
   collisionDetection();
   drawScore();
+  drawLives();
+  drawLevel();
   // check to see if the ball is on the edge, then reverse directions
   if (y + dy < ballRadius) dy = -dy;
   if (y + dy > canvas.height - ballRadius) {
     if (x > paddleX && x < paddleX + paddleWidth) dy = -dy;
     else {
+      lives--;
+      if (!lives) {
+        document.location.reload();
+      }
       // alert('You Lose!');
       x = canvas.width / 2;
       y = canvas.height - 30;
-      document.location.reload();
     }
   }
   if (x + dx > canvas.width - ballRadius || x + dy < ballRadius) dx = -dx;
@@ -150,6 +184,7 @@ const draw = () => {
   if (leftPressed && paddleX > 0) paddleX -= 7;
   x += dx;
   y += dy;
+  requestAnimationFrame(draw);
 };
 
-setInterval(draw, 20);
+draw();
